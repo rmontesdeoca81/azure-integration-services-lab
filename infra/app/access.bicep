@@ -1,12 +1,18 @@
 param managedIdentityName string
 param serviceBusName string
+param sqlserverName string
 param location string
+//param logicApp1Name string
+//param logicApp2Name string
+//param functionName string
 
-
+//Service Bus Data Sender and Receiver roles
 // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#azure-service-bus-data-sender
 var roleIdS = '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39' // Azure Service Bus Data Sender
 // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#azure-service-bus-data-receiver
 var roleIdR = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0' // Azure Service Bus Data Receiver
+
+var sqlContributorRoleId = '6d8ee4ec-f05a-4a1d-8b00-a9b17e38b437'
 
 // user assigned managed identity to use throughout
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -16,6 +22,24 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
 
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = {
   name: serviceBusName
+}
+
+resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' existing = {
+  name: sqlserverName
+}
+
+// Grant permissions to the managedIdentity to specific role to sql server
+resource roleAssignmentSqlServer 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(sqlServer.id, sqlContributorRoleId, managedIdentityName)
+  scope: sqlServer
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', sqlContributorRoleId)
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal' // managed identity is a form of service principal
+  }
+  dependsOn: [
+    sqlServer
+  ]
 }
 
 // Grant permissions to the managedIdentity to specific role to servicebus

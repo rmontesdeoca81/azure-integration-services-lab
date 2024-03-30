@@ -9,6 +9,9 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
+@secure()
+param sqlPassword string
+
 //ServiceBus 
 param serviceBusTopicName string = 'orders'
 param serviceBusSubscriptionName string = 'orders'
@@ -28,13 +31,133 @@ var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
 
-
 // Organize resources in a resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
   location: location
   tags: tags
 }
+
+// Logic App 1
+module logicApp1Resources './app/logicapp.bicep' = {
+  name: 'logic-app1'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    userAssignedIdentityId: access.outputs.managedIdentityId
+    logicAppName: '${abbrs.logicWorkflows}1-${resourceToken}'
+    appServicePlanName: appServicePlanWindowsResources.outputs.name
+    storageAccountName: storageResources.outputs.name
+    applicationInsightsName: monitoring.outputs.applicationInsightsName
+  }
+  dependsOn: [
+    appServicePlanWindowsResources
+  ]
+}
+
+// Logic App 2
+module logicApp2Resources './app/logicapp.bicep' = {
+  name: 'logic-app2'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    userAssignedIdentityId: access.outputs.managedIdentityId
+    logicAppName: '${abbrs.logicWorkflows}2-${resourceToken}'
+    appServicePlanName: appServicePlanWindowsResources.outputs.name
+    storageAccountName: storageResources.outputs.name
+    applicationInsightsName: monitoring.outputs.applicationInsightsName
+  }
+  dependsOn: [
+    appServicePlanWindowsResources
+  ]
+}
+
+// Service Bus
+module serviceBusResources './app/servicebus.bicep' = {
+  name: 'sb-resources'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    serviceBusName: '${abbrs.serviceBusNamespaces}${resourceToken}'
+    skuName: 'Standard'
+    subscriptionName: serviceBusSubscriptionName
+    topicName: serviceBusTopicName
+  }
+}
+
+// API Management
+module apimanagementResources './core/gateway/apim.bicep' = {
+  name: 'apim'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
+    name: '${abbrs.apiManagementService}${resourceToken}'
+  }
+  dependsOn: [
+    monitoring
+  ]
+}
+
+module keyVaultResources './core//security/keyvault.bicep' = {
+  name: 'keyvault'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: '${abbrs.keyVaultVaults}${resourceToken}'
+  }
+}
+
+// SQL Database
+module databaseResources './core/database/sqlserver/sqlserver.bicep' = {
+  name: 'sqlserver'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: '${abbrs.sqlServersDatabases}${resourceToken}'
+    databaseName: 'db-events'
+    keyVaultName: keyVaultResources.outputs.name
+    sqlAdminPassword: sqlPassword
+    appUserPassword: sqlPassword
+  }
+}
+
+// Function App
+module functionAppResources './core/host/functions.bicep' = {
+  name: 'functions'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: '${abbrs.webSitesFunctions}${resourceToken}'
+    appServicePlanId: appServicePlanLinuxResources.outputs.id
+    storageAccountName: storageResources.outputs.name
+    userAssignedIdentityId: access.outputs.managedIdentityId
+    runtimeName: 'dotnetcore'
+    runtimeVersion: '4'
+  }
+  dependsOn: [
+    storageResources
+    appServicePlanLinuxResources
+  ]
+}
+
+// Event Grid
+/*module eventGridResources './app/eventgrid.bicep' = {
+  name: 'eventgrid'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    eventGridTopicName: '${abbrs.eventGridDomainsTopics}${resourceToken}'
+  }
+}*/
 
 // Monitor application with Azure Monitor
 module monitoring './core/monitor/monitoring.bicep' = {
@@ -49,76 +172,13 @@ module monitoring './core/monitor/monitoring.bicep' = {
   }
 }
 
-// Service Bus
-module serviceBusResources './app/servicebus.bicep' = {
-  name: 'sb-resources'
-  scope: rg
-  params: {
-    location: location
-    tags: tags
-    serviceBusName: '${abbrs.serviceBusNamespaces}${resourceToken}'
-    skuName: 'Standard'
-    subscriptionName:serviceBusSubscriptionName
-    topicName: serviceBusTopicName
-  }
-
-}
-
-// Service Bus Access
-module serviceBusAccess './app/access.bicep' = {
-  name: 'sb-access'
-  scope: rg
-  params: {
-    location: location
-    serviceBusName: serviceBusResources.outputs.serviceBusName
-    managedIdentityName: '${abbrs.managedIdentityUserAssignedIdentities}${resourceToken}'
-  }
-}
-
-// Logic App 1
-module logicApp1Resources './app/logicapp.bicep' = {
-  name: 'logic-app1'
-  scope: rg
-  params: {
-    location: location
-    tags: tags
-    logicAppName: '${abbrs.logicWorkflows}1-${resourceToken}'
-  }
-}
-
-// Logic App 2
-module logicApp2Resources './app/logicapp.bicep' = {
-  name: 'logic-app2'
-  scope: rg
-  params: {
-    location: location
-    tags: tags
-    logicAppName: '${abbrs.logicWorkflows}2-${resourceToken}'
-  }
-}
-
-// API Management
-module apimanagementResources './core/gateway/apim.bicep' = {
-  name: 'apim'
-  scope: rg
-  params: {
-    location: location
-    tags: tags    
-    applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
-    name: '${abbrs.apiManagementService}${resourceToken}'
-  }
-  dependsOn: [
-    monitoring
-  ]
-}
-
 // Storage
 module storageResources './core/storage/storage-account.bicep' = {
   name: 'storage'
   scope: rg
   params: {
     location: location
-    tags: tags    
+    tags: tags
     name: '${abbrs.storageStorageAccounts}${resourceToken}'
     containers: [
       {
@@ -129,16 +189,17 @@ module storageResources './core/storage/storage-account.bicep' = {
   }
 }
 
-// App Service Plan
-module appServicePlanResources './core/host/appserviceplan.bicep' = {
-  name: 'appserviceplan'
+// App Service Plan Function App
+module appServicePlanLinuxResources './core/host/appserviceplan.bicep' = {
+  name: 'appserviceplanlinux'
   scope: rg
   params: {
     location: location
-    tags: tags    
-    name: 'service-plan-${resourceToken}'
+    tags: tags
+    name: 'service-plan-linux-${resourceToken}'
+    kind: 'Linux'
     sku: {
-      name: 'S1' // Free tier
+      name: 'S1'
       tier: 'Standard'
       size: 'S1'
       family: 'S'
@@ -147,39 +208,52 @@ module appServicePlanResources './core/host/appserviceplan.bicep' = {
   }
 }
 
-// Function App
-module functionAppResources './core/host/functions.bicep' = {
-  name: 'functions'
+// App Service Plan Logic App
+module appServicePlanWindowsResources './core/host/appserviceplan.bicep' = {
+  name: 'appserviceplanwindows'
   scope: rg
   params: {
     location: location
-    tags: tags    
-    name: '${abbrs.webSitesFunctions}${resourceToken}'
-    appServicePlanId:appServicePlanResources.outputs.id
-    storageAccountName: storageResources.outputs.name
-    runtimeName:'dotnetcore'
-    runtimeVersion:'4'
+    tags: tags
+    name: 'service-plan-windows-${resourceToken}'
+    sku: {
+      name: 'WS1'
+      tier: 'WorkflowStandard'
+      size: 'WS1'
+      family: 'WS'
+      capacity: 1
+    }
+    kind: 'elastic'
+    properties: {
+      perSiteScaling: false
+      elasticScaleEnabled: true
+      maximumElasticWorkerCount: 20
+      isSpot: false
+      reserved: false
+      isXenon: false
+      hyperV: false
+      targetWorkerCount: 0
+      targetWorkerSizeId: 0
+      zoneRedundant: false
+    }
   }
-  dependsOn: [
-    storageResources
-    appServicePlanResources
-  ]
 }
 
-// Event Grid
-module eventGridResources './app/eventgrid.bicep' = {
-  name: 'eventgrid'
+// Access
+module access './app/access.bicep' = {
+  name: 'sb-access'
   scope: rg
   params: {
     location: location
-    tags: tags    
-    eventGridTopicName: '${abbrs.eventGridDomainsTopics}${resourceToken}'
+    serviceBusName: serviceBusResources.outputs.serviceBusName
+    sqlserverName: databaseResources.outputs.sqlServerName
+    managedIdentityName: '${abbrs.managedIdentityUserAssignedIdentities}${resourceToken}'
   }
 }
 
 output SERVICEBUS_ENDPOINT string = serviceBusResources.outputs.SERVICEBUS_ENDPOINT
 output SERVICEBUS_NAME string = serviceBusResources.outputs.serviceBusName
-output AZURE_MANAGED_IDENTITY_NAME string = serviceBusAccess.outputs.managedIdentityName
+output AZURE_MANAGED_IDENTITY_NAME string = access.outputs.managedIdentityName
 
 output LOGICAAPP1_ENDPOINT string = logicApp1Resources.outputs.LOGICAPP_ENDPOINT
 output LOGICAPP1_NAME string = logicApp1Resources.outputs.logicAppName
@@ -192,11 +266,13 @@ output APIM_NAME string = apimanagementResources.outputs.apimServiceName
 output STORAGE_NAME string = storageResources.outputs.name
 output STORAGE_PRIMARY_ENDPOINT_BLOB string = storageResources.outputs.primaryEndpoints.blob
 
-output APSERVICEPLAN_ID string = appServicePlanResources.outputs.id
+output APSERVICEPLAN_LINUX_ID string = appServicePlanLinuxResources.outputs.id
+output APSERVICEPLAN_WINDOWS_ID string = appServicePlanWindowsResources.outputs.id
 
 output FUNCTION_ENDPOINT string = functionAppResources.outputs.uri
 output FUNCTION_NAME string = functionAppResources.outputs.name
 
-
-
-
+//output SQL_CONNECTIONSTRING string = databaseResources.outputs.connectionStringKey
+output SQL_SERVERNAME string = databaseResources.outputs.sqlServerName
+output SQL_ADMIN_USERNAME string = databaseResources.outputs.sqlAdminUserName
+output SQL_FULLY_QUALIFIEDNAME string = databaseResources.outputs.fullyQualifiedDomainName

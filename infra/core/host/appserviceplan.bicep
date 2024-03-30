@@ -3,18 +3,16 @@ param location string = resourceGroup().location
 param tags object = {}
 
 param kind string = ''
-param reserved bool = true
 param sku object
+param properties object = { reserved: true }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: name
   location: location
   tags: tags
   sku: sku
   kind: kind
-  properties: {
-    reserved: reserved
-  }
+  properties: properties
 }
 
 output id string = appServicePlan.id

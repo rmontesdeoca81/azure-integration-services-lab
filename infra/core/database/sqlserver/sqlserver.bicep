@@ -8,6 +8,9 @@ param keyVaultName string
 param sqlAdmin string = 'sqlAdmin'
 param connectionStringKey string = 'AZURE-SQL-CONNECTION-STRING'
 
+//For testing purposes, we are using a single table. In a real-world scenario, you would have multiple tables.
+param tableName string 
+
 @secure()
 param sqlAdminPassword string
 @secure()
@@ -76,6 +79,10 @@ resource sqlDeploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' 
         name: 'SQLADMIN'
         value: sqlAdmin
       }
+      {
+        name: 'TABLENAME'
+        value: tableName
+      }
     ]
 
     scriptContent: '''
@@ -89,6 +96,15 @@ create user ${APPUSERNAME} with password = '${APPUSERPASSWORD}'
 go
 alter role db_owner add member ${APPUSERNAME}
 go
+
+CREATE TABLE ${TABLENAME} (
+  Id INT PRIMARY KEY IDENTITY,
+  Name NVARCHAR(50),
+  Description NVARCHAR(255),
+  CreatedAt DATETIME
+)
+go
+
 SCRIPT_END
 
 ./sqlcmd -S ${DBSERVER} -d ${DBNAME} -U ${SQLADMIN} -i ./initDb.sql
@@ -124,8 +140,9 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
   name: keyVaultName
 }
 
-var connectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName}; Database=${sqlServer::database.name}; User=${appUser}'
+var connectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName}; Database=${sqlServer::database.name}; User=${sqlAdmin}; Password=${sqlAdminPassword}'
 output connectionStringKey string = connectionStringKey
+output connectionString string = connectionString
 output databaseName string = sqlServer::database.name
 output sqlServerName string = sqlServer.name
 output sqlAdminUserName string = sqlAdmin

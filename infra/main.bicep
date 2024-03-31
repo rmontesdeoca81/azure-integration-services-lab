@@ -125,6 +125,7 @@ module databaseResources './core/database/sqlserver/sqlserver.bicep' = {
     keyVaultName: keyVaultResources.outputs.name
     sqlAdminPassword: sqlPassword
     appUserPassword: sqlPassword
+    tableName: 'GlobalEvents'
   }
 }
 
@@ -272,7 +273,8 @@ output APSERVICEPLAN_WINDOWS_ID string = appServicePlanWindowsResources.outputs.
 output FUNCTION_ENDPOINT string = functionAppResources.outputs.uri
 output FUNCTION_NAME string = functionAppResources.outputs.name
 
-//output SQL_CONNECTIONSTRING string = databaseResources.outputs.connectionStringKey
+output SQL_CONNECTIONSTRINGKEY string = databaseResources.outputs.connectionStringKey
+output SQL_CONNECTIONSTRING string = databaseResources.outputs.connectionString
 output SQL_SERVERNAME string = databaseResources.outputs.sqlServerName
 output SQL_ADMIN_USERNAME string = databaseResources.outputs.sqlAdminUserName
 output SQL_FULLY_QUALIFIEDNAME string = databaseResources.outputs.fullyQualifiedDomainName

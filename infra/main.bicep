@@ -140,7 +140,7 @@ module functionAppResources './core/host/functions.bicep' = {
     appServicePlanId: appServicePlanLinuxResources.outputs.id
     storageAccountName: storageResources.outputs.name
     userAssignedIdentityId: access.outputs.managedIdentityId
-    runtimeName: 'dotnetcore'
+    runtimeName: 'dotnet'
     runtimeVersion: '4'
   }
   dependsOn: [

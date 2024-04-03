@@ -25,6 +25,9 @@
     },
     "location": {
       "value": "eastus"
+    },
+    "sqlPassword": {
+      "value": "Password1234!"
     }
   }
 }

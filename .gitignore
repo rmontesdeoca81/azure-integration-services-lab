@@ -22,7 +22,7 @@ packages
 *.ipr
 *.iws
 .vs/
-.vscode/
+
 .code-workspace
 .settings/
 .metadata

@@ -1,0 +1,30 @@
+name: Deploy Bicep
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: "Checkout code"
+          uses: actions/checkout@v2
+
+        - name: "Login to Azure"
+          uses: azure/login@v1
+          with:
+                creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+        - name: "Install Bicep CLI"
+          run: |
+                curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+                chmod +x ./bicep
+                sudo mv ./bicep /usr/local/bin/bicep
+                bicep --help
+
+        - name: "Deploy Bicep"
+          run: |
+                az deployment sub create --location eastus --template-file ./infra/main.bicep --parameters ./infra/main.parameters.github.json

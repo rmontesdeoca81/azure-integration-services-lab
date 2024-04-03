@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "serviceBusTopicName": {
+      "value": "orders"
+    },
+    "serviceBusSubscriptionName": {
+      "value": "orders"
+    },
+    "applicationInsightsDashboardName": {
+      "value": "appins030424edrm"
+    },
+    "applicationInsightsName": {
+      "value": "030424edrmappins"
+    },
+    "logAnalyticsName": {
+      "value": "lanaliyticsedrm"
+    },
+    "resourceGroupName": {
+      "value": "mtccloudacaedrm"
+    },
+    "environmentName": {
+      "value": "sandbox"
+    },
+    "location": {
+      "value": "eastus"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 param managedIdentityName string
 param serviceBusName string
 param sqlserverName string
+param storageName string
 param location string
 //param logicApp1Name string
 //param logicApp2Name string
@@ -14,6 +15,8 @@ var roleIdR = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0' // Azure Service Bus Data R
 
 var sqlContributorRoleId = '6d8ee4ec-f05a-4a1d-8b00-a9b17e38b437'
 
+var storageContributor = '17d1049b-9a84-46fb-8f53-869881c3d3ab'
+
 // user assigned managed identity to use throughout
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: managedIdentityName
@@ -26,6 +29,24 @@ resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = {
 
 resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' existing = {
   name: sqlserverName
+}
+
+resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
+  name: storageName
+}
+
+// Grant permissions to the managedIdentity to specific role to storage account
+resource roleAssignmentStorage 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storage.id, storageContributor, managedIdentityName)
+  scope: storage
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageContributor)
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal' // managed identity is a form of service principal
+  }
+  dependsOn: [
+    storage
+  ]
 }
 
 // Grant permissions to the managedIdentity to specific role to sql server

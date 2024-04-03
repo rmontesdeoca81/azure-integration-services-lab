@@ -16,6 +16,9 @@ param sqlPassword string
 param serviceBusTopicName string = 'orders'
 param serviceBusSubscriptionName string = 'orders'
 
+//Event Grid
+param eventGridTopicName string = 'evt-orders'
+
 //Application Insights
 param applicationInsightsDashboardName string = ''
 param applicationInsightsName string = ''
@@ -150,15 +153,16 @@ module functionAppResources './core/host/functions.bicep' = {
 }
 
 // Event Grid
-/*module eventGridResources './app/eventgrid.bicep' = {
+module eventGridResources './app/eventgrid.bicep' = {
   name: 'eventgrid'
   scope: rg
   params: {
     location: location
     tags: tags
-    eventGridTopicName: '${abbrs.eventGridDomainsTopics}${resourceToken}'
+    eventGridTopicName: eventGridTopicName 
+    eventGridNamespace: '${abbrs.eventGridNamespaces}${resourceToken}'
   }
-}*/
+}
 
 // Monitor application with Azure Monitor
 module monitoring './core/monitor/monitoring.bicep' = {
@@ -248,6 +252,7 @@ module access './app/access.bicep' = {
     location: location
     serviceBusName: serviceBusResources.outputs.serviceBusName
     sqlserverName: databaseResources.outputs.sqlServerName
+    storageName: storageResources.outputs.name
     managedIdentityName: '${abbrs.managedIdentityUserAssignedIdentities}${resourceToken}'
   }
 }

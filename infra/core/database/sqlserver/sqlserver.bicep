@@ -99,8 +99,8 @@ go
 
 CREATE TABLE ${TABLENAME} (
   Id INT PRIMARY KEY IDENTITY,
-  Name NVARCHAR(50),
-  Description NVARCHAR(255),
+  Name NVARCHAR(500),
+  Description NVARCHAR(500),
   CreatedAt DATETIME
 )
 go

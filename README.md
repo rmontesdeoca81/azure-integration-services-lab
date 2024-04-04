@@ -28,3 +28,5 @@ This command will prompt you for the following information:
 - `Azure Subscription`: The Azure Subscription where your resources will be deployed.
 
 > NOTE: This may take a while to complete as it executes three commands: `azd package` (packages a deployable copy of your application),`azd provision` (provisions Azure resources), and `azd deploy` (deploys application code). You will see a progress indicator as it packages, provisions and deploys your application.
+
+Other deployment method

@@ -1,5 +1,6 @@
 param name string
 param location string = resourceGroup().location
+param userAssignedIdentityId string
 param tags object = {}
 
 @description('The email address of the owner of the service')
@@ -53,6 +54,12 @@ resource apimService 'Microsoft.ApiManagement/service@2021-08-01' = {
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10': 'false'
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11': 'false'
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30': 'false'
+    }
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentityId}': {}
     }
   }
 }

@@ -9,8 +9,15 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
+//Secure password wirh numbers, leter and special characters
+@minLength(8)
+@description('SQL Password< Numbers, letters and special characters')
 @secure()
 param sqlPassword string
+
+// Developer Name
+@description('Developer Name')
+param developerName string
 
 //ServiceBus 
 param serviceBusTopicName string = 'orders'
@@ -31,12 +38,12 @@ param resourceGroupName string = ''
 // }
 
 var abbrs = loadJsonContent('./abbreviations.json')
-var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location, developerName))
 var tags = { 'azd-env-name': environmentName }
 
 // Organize resources in a resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
+  name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}-${resourceToken}'
   location: location
   tags: tags
 }
@@ -99,7 +106,9 @@ module apimanagementResources './core/gateway/apim.bicep' = {
     location: location
     tags: tags
     applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
+    userAssignedIdentityId: access.outputs.managedIdentityId
     name: '${abbrs.apiManagementService}${resourceToken}'
+    sku: 'Developer'
   }
   dependsOn: [
     monitoring

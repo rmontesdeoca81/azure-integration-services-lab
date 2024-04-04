@@ -1,0 +1,17 @@
+az rest --method delete --header "Accept=application/json" -u 'https://management.azure.com/subscriptions/4f9a5ba7-9b14-41ae-802a-8e7607f15507/providers/Microsoft.ApiManagement/locations/eastus/deletedservices/apim-pnb5iz36novls?api-version=2021-12-01-preview'
+
+to purge
+AKV go to Azure and manage deleted vaults and purge
+
+AZURE_CREDENTIALS Value
+{
+  "clientId": "xxxxx",
+  "clientSecret": "xxxxx",
+  "tenantId": "xxxxx",
+  "subscriptionId": "xxxxx"
+}
+
+Roles needed to the 
+
+Contributor
+Role Based Access Control Administrator

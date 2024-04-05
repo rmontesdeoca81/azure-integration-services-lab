@@ -28,6 +28,9 @@
     },
     "sqlPassword": {
       "value": "Password1234!"
+    },
+    "developerName":{
+      "value":"edrm"
     }
   }
 }

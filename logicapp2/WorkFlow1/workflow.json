@@ -12,7 +12,7 @@
                                         "inputs": {
                                             "parameters": {
                                                 "setColumns": {
-                                                    "CreatedAt": "@{items('For_each')['eventTime']}",
+                                                    "CreatedAt": "@{body('Parse_JSON_Current_Item_Created')?['eventTime']}",
                                                     "Description": "@{body('Parse_JSON_Current_Item_Created')?['eventType']}",
                                                     "Name": "@{body('Parse_JSON_Current_Item_Created')?['subject']}"
                                                 },
@@ -38,39 +38,7 @@
                                                 "properties": {
                                                     "data": {
                                                         "properties": {
-                                                            "api": {
-                                                                "type": "string"
-                                                            },
-                                                            "blobType": {
-                                                                "type": "string"
-                                                            },
-                                                            "clientRequestId": {
-                                                                "type": "string"
-                                                            },
-                                                            "contentLength": {
-                                                                "type": "integer"
-                                                            },
-                                                            "contentType": {
-                                                                "type": "string"
-                                                            },
-                                                            "eTag": {
-                                                                "type": "string"
-                                                            },
-                                                            "requestId": {
-                                                                "type": "string"
-                                                            },
-                                                            "sequencer": {
-                                                                "type": "string"
-                                                            },
-                                                            "storageDiagnostics": {
-                                                                "properties": {
-                                                                    "batchId": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            },
-                                                            "url": {
+                                                            "resourceUri": {
                                                                 "type": "string"
                                                             }
                                                         },
@@ -105,6 +73,74 @@
                                     }
                                 },
                                 "case": "Microsoft.Storage.BlobCreated"
+                            },
+                            "Case_Blob_Storage_Deleted": {
+                                "actions": {
+                                    "Parse_JSON_Current_Item_Created_copy": {
+                                        "inputs": {
+                                            "content": "@items('For_each')",
+                                            "schema": {
+                                                "properties": {
+                                                    "data": {
+                                                        "properties": {
+                                                            "resourceUri": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "dataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventType": {
+                                                        "type": "string"
+                                                    },
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "subject": {
+                                                        "type": "string"
+                                                    },
+                                                    "topic": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "ParseJson"
+                                    },
+                                    "Send_an_email_(V2)": {
+                                        "inputs": {
+                                            "body": {
+                                                "Body": "<br>",
+                                                "Importance": "Normal",
+                                                "Subject": "Blob Storage Deleted",
+                                                "To": "reynaldom@microsoft.com"
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "outlook-1"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/v2/Mail"
+                                        },
+                                        "runAfter": {
+                                            "Parse_JSON_Current_Item_Created_copy": [
+                                                "SUCCEEDED"
+                                            ]
+                                        },
+                                        "type": "ApiConnection"
+                                    }
+                                },
+                                "case": "Microsoft.Storage.BlobDeleted"
                             },
                             "Case_Validation": {
                                 "actions": {

@@ -1,0 +1,371 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each": {
+                "actions": {
+                    "Switch": {
+                        "cases": {
+                            "Case_Blob_Storage_Created": {
+                                "actions": {
+                                    "Insert_row": {
+                                        "inputs": {
+                                            "parameters": {
+                                                "setColumns": {
+                                                    "CreatedAt": "@{body('Parse_JSON_Current_Item_Created')?['eventTime']}",
+                                                    "Description": "@{body('Parse_JSON_Current_Item_Created')?['eventType']}",
+                                                    "Name": "@{body('Parse_JSON_Current_Item_Created')?['subject']}"
+                                                },
+                                                "tableName": "[dbo].[GlobalEvents]"
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql",
+                                                "operationId": "insertRow",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Parse_JSON_Current_Item_Created": [
+                                                "SUCCEEDED"
+                                            ]
+                                        },
+                                        "type": "ServiceProvider"
+                                    },
+                                    "Parse_JSON_Current_Item_Created": {
+                                        "inputs": {
+                                            "content": "@items('For_each')",
+                                            "schema": {
+                                                "properties": {
+                                                    "data": {
+                                                        "properties": {
+                                                            "resourceUri": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "dataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventType": {
+                                                        "type": "string"
+                                                    },
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "subject": {
+                                                        "type": "string"
+                                                    },
+                                                    "topic": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "ParseJson"
+                                    }
+                                },
+                                "case": "Microsoft.Storage.BlobCreated"
+                            },
+                            "Case_Blob_Storage_Deleted": {
+                                "actions": {
+                                    "Parse_JSON_Current_Item_Created_copy": {
+                                        "inputs": {
+                                            "content": "@items('For_each')",
+                                            "schema": {
+                                                "properties": {
+                                                    "data": {
+                                                        "properties": {
+                                                            "resourceUri": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "dataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventType": {
+                                                        "type": "string"
+                                                    },
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "subject": {
+                                                        "type": "string"
+                                                    },
+                                                    "topic": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "ParseJson"
+                                    },
+                                    "Send_an_email_(V2)": {
+                                        "inputs": {
+                                            "body": {
+                                                "Body": "<br>",
+                                                "Importance": "Normal",
+                                                "Subject": "Blob Storage Deleted",
+                                                "To": "reynaldom@microsoft.com"
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "outlook-1"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/v2/Mail"
+                                        },
+                                        "runAfter": {
+                                            "Parse_JSON_Current_Item_Created_copy": [
+                                                "SUCCEEDED"
+                                            ]
+                                        },
+                                        "type": "ApiConnection"
+                                    }
+                                },
+                                "case": "Microsoft.Storage.BlobDeleted"
+                            },
+                            "Case_Validation": {
+                                "actions": {
+                                    "HTTP": {
+                                        "inputs": {
+                                            "body": "@items('For_each')",
+                                            "method": "POST",
+                                            "uri": "@body('Parse_JSON_Current_Item')?['data']?['validationUrl']"
+                                        },
+                                        "runAfter": {
+                                            "Parse_JSON_Current_Item": [
+                                                "SUCCEEDED"
+                                            ]
+                                        },
+                                        "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                                "transferMode": "Chunked"
+                                            }
+                                        },
+                                        "type": "Http"
+                                    },
+                                    "Parse_JSON_Current_Item": {
+                                        "inputs": {
+                                            "content": "@items('For_each')",
+                                            "schema": {
+                                                "properties": {
+                                                    "data": {
+                                                        "properties": {
+                                                            "validationCode": {
+                                                                "type": "string"
+                                                            },
+                                                            "validationUrl": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "dataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventType": {
+                                                        "type": "string"
+                                                    },
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadataVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "subject": {
+                                                        "type": "string"
+                                                    },
+                                                    "topic": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "ParseJson"
+                                    },
+                                    "Set_variable": {
+                                        "inputs": {
+                                            "name": "Response",
+                                            "value": "{\n\"validationResponse\":\"@{body('Parse_JSON_Current_Item')?['data']?['validationCode']}\"\n}"
+                                        },
+                                        "runAfter": {
+                                            "HTTP": [
+                                                "SUCCEEDED"
+                                            ]
+                                        },
+                                        "type": "SetVariable"
+                                    }
+                                },
+                                "case": "Microsoft.EventGrid.SubscriptionValidationEvent"
+                            }
+                        },
+                        "default": {
+                            "actions": {}
+                        },
+                        "expression": "@items('For_each')['eventType']",
+                        "type": "Switch"
+                    }
+                },
+                "foreach": "@outputs('Parse_JSON')['body']",
+                "runAfter": {
+                    "Initialize_variable_Final_Delete": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "foreach"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "Response",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Parse_JSON": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_Delete": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "DeleteURL",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_Final_Delete": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "FinalDeleteURL",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_Delete": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Parse_JSON": {
+                "inputs": {
+                    "content": "@triggerBody()",
+                    "schema": {
+                        "items": {
+                            "properties": {
+                                "data": {
+                                    "properties": {
+                                        "validationCode": {
+                                            "type": "string"
+                                        },
+                                        "validationUrl": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "dataVersion": {
+                                    "type": "string"
+                                },
+                                "eventTime": {
+                                    "type": "string"
+                                },
+                                "eventType": {
+                                    "type": "string"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "metadataVersion": {
+                                    "type": "string"
+                                },
+                                "subject": {
+                                    "type": "string"
+                                },
+                                "topic": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "topic",
+                                "subject",
+                                "data",
+                                "eventType",
+                                "eventTime",
+                                "metadataVersion",
+                                "dataVersion"
+                            ],
+                            "type": "object"
+                        },
+                        "type": "array"
+                    }
+                },
+                "runAfter": {},
+                "type": "ParseJson"
+            },
+            "Response": {
+                "inputs": {
+                    "body": "@variables('Response')",
+                    "statusCode": 200
+                },
+                "kind": "Http",
+                "runAfter": {
+                    "For_each": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "Response"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "inputs": {
+                    "method": "POST"
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    },
+    "kind": "Stateful"
+}

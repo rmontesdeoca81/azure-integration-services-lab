@@ -1,0 +1,73 @@
+{
+  "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "actions": {
+          "Compose": {
+              "inputs": {
+                  "detalle": "@triggerBody()",
+                  "estatus": "generada",
+                  "hora_generacion": "@utcNow()",
+                  "order_id": "@guid()"
+              },
+              "runAfter": {},
+              "type": "Compose"
+          },
+          "Send_message": {
+              "inputs": {
+                  "body": {
+                      "ContentData": "@{base64(outputs('Compose'))}",
+                      "SessionId": "apimtriggersb "
+                  },
+                  "host": {
+                      "connection": {
+                          "referenceName": "servicebus-1"
+                      }
+                  },
+                  "method": "post",
+                  "path": "/@{encodeURIComponent(encodeURIComponent('orders'))}/messages",
+                  "queries": {
+                      "systemProperties": "None"
+                  }
+              },
+              "runAfter": {
+                  "Compose": [
+                      "SUCCEEDED"
+                  ]
+              },
+              "type": "ApiConnection"
+          }
+      },
+      "contentVersion": "1.0.0.0",
+      "outputs": {},
+      "triggers": {
+          "When_a_HTTP_request_is_received": {
+              "inputs": {
+                  "method": "POST",
+                  "schema": {
+                      "properties": {
+                          "cantidad": {
+                              "type": "integer"
+                          },
+                          "destino": {
+                              "type": "string"
+                          },
+                          "origen": {
+                              "type": "string"
+                          },
+                          "producto": {
+                              "type": "string"
+                          },
+                          "tipo": {
+                              "type": "string"
+                          }
+                      },
+                      "type": "object"
+                  }
+              },
+              "kind": "Http",
+              "type": "Request"
+          }
+      }
+  },
+  "kind": "Stateful"
+}

@@ -9,12 +9,22 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
+//Secure password wirh numbers, leter and special characters
+@minLength(8)
+@description('SQL Password< Numbers, letters and special characters')
 @secure()
 param sqlPassword string
+
+// Developer Name
+@description('Developer Name')
+param developerName string
 
 //ServiceBus 
 param serviceBusTopicName string = 'orders'
 param serviceBusSubscriptionName string = 'orders'
+
+//Event Grid
+//param eventGridTopicName string = 'evt-orders'
 
 //Application Insights
 param applicationInsightsDashboardName string = ''
@@ -28,12 +38,12 @@ param resourceGroupName string = ''
 // }
 
 var abbrs = loadJsonContent('./abbreviations.json')
-var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location, developerName))
 var tags = { 'azd-env-name': environmentName }
 
 // Organize resources in a resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
+  name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}-${resourceToken}'
   location: location
   tags: tags
 }
@@ -89,19 +99,21 @@ module serviceBusResources './app/servicebus.bicep' = {
 }
 
 // API Management
-module apimanagementResources './core/gateway/apim.bicep' = {
+/*module apimanagementResources './core/gateway/apim.bicep' = {
   name: 'apim'
   scope: rg
   params: {
     location: location
     tags: tags
     applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
+    userAssignedIdentityId: access.outputs.managedIdentityId
     name: '${abbrs.apiManagementService}${resourceToken}'
+    sku: 'Developer'
   }
   dependsOn: [
     monitoring
   ]
-}
+}*/
 
 module keyVaultResources './core//security/keyvault.bicep' = {
   name: 'keyvault'
@@ -156,9 +168,10 @@ module functionAppResources './core/host/functions.bicep' = {
   params: {
     location: location
     tags: tags
-    eventGridTopicName: '${abbrs.eventGridDomainsTopics}${resourceToken}'
+    eventGridTopicName: eventGridTopicName 
+    eventGridNamespace: '${abbrs.eventGridNamespaces}${resourceToken}'
   }
-}*/
+}//*/
 
 // Monitor application with Azure Monitor
 module monitoring './core/monitor/monitoring.bicep' = {
@@ -248,6 +261,7 @@ module access './app/access.bicep' = {
     location: location
     serviceBusName: serviceBusResources.outputs.serviceBusName
     sqlserverName: databaseResources.outputs.sqlServerName
+    storageName: storageResources.outputs.name
     managedIdentityName: '${abbrs.managedIdentityUserAssignedIdentities}${resourceToken}'
   }
 }
@@ -261,8 +275,8 @@ output LOGICAPP1_NAME string = logicApp1Resources.outputs.logicAppName
 output LOGICAAPP2_ENDPOINT string = logicApp2Resources.outputs.LOGICAPP_ENDPOINT
 output LOGICAPP2_NAME string = logicApp2Resources.outputs.logicAppName
 
-output APIM_ENDPOINT string = apimanagementResources.outputs.APIM_ENDPOINT
-output APIM_NAME string = apimanagementResources.outputs.apimServiceName
+//output APIM_ENDPOINT string = apimanagementResources.outputs.APIM_ENDPOINT
+//output APIM_NAME string = apimanagementResources.outputs.apimServiceName
 
 output STORAGE_NAME string = storageResources.outputs.name
 output STORAGE_PRIMARY_ENDPOINT_BLOB string = storageResources.outputs.primaryEndpoints.blob

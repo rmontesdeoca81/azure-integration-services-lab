@@ -24,7 +24,7 @@ param serviceBusTopicName string = 'orders'
 param serviceBusSubscriptionName string = 'orders'
 
 //Event Grid
-param eventGridTopicName string = 'evt-orders'
+//param eventGridTopicName string = 'evt-orders'
 
 //Application Insights
 param applicationInsightsDashboardName string = ''
@@ -99,7 +99,7 @@ module serviceBusResources './app/servicebus.bicep' = {
 }
 
 // API Management
-module apimanagementResources './core/gateway/apim.bicep' = {
+/*module apimanagementResources './core/gateway/apim.bicep' = {
   name: 'apim'
   scope: rg
   params: {
@@ -113,7 +113,7 @@ module apimanagementResources './core/gateway/apim.bicep' = {
   dependsOn: [
     monitoring
   ]
-}
+}*/
 
 module keyVaultResources './core//security/keyvault.bicep' = {
   name: 'keyvault'
@@ -162,7 +162,7 @@ module functionAppResources './core/host/functions.bicep' = {
 }
 
 // Event Grid
-module eventGridResources './app/eventgrid.bicep' = {
+/*module eventGridResources './app/eventgrid.bicep' = {
   name: 'eventgrid'
   scope: rg
   params: {
@@ -171,7 +171,7 @@ module eventGridResources './app/eventgrid.bicep' = {
     eventGridTopicName: eventGridTopicName 
     eventGridNamespace: '${abbrs.eventGridNamespaces}${resourceToken}'
   }
-}
+}//*/
 
 // Monitor application with Azure Monitor
 module monitoring './core/monitor/monitoring.bicep' = {
@@ -275,8 +275,8 @@ output LOGICAPP1_NAME string = logicApp1Resources.outputs.logicAppName
 output LOGICAAPP2_ENDPOINT string = logicApp2Resources.outputs.LOGICAPP_ENDPOINT
 output LOGICAPP2_NAME string = logicApp2Resources.outputs.logicAppName
 
-output APIM_ENDPOINT string = apimanagementResources.outputs.APIM_ENDPOINT
-output APIM_NAME string = apimanagementResources.outputs.apimServiceName
+//output APIM_ENDPOINT string = apimanagementResources.outputs.APIM_ENDPOINT
+//output APIM_NAME string = apimanagementResources.outputs.apimServiceName
 
 output STORAGE_NAME string = storageResources.outputs.name
 output STORAGE_PRIMARY_ENDPOINT_BLOB string = storageResources.outputs.primaryEndpoints.blob

@@ -15,9 +15,12 @@ param location string
 @secure()
 param sqlPassword string
 
-// Developer Name
+// Developer Name to capture and vaidate only one name no spaces
+@minLength(1)
+@maxLength(10)
 @description('Developer Name')
 param developerName string
+
 
 //ServiceBus 
 param serviceBusTopicName string = 'orders'
@@ -43,7 +46,7 @@ var tags = { 'azd-env-name': environmentName }
 
 // Organize resources in a resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}-${resourceToken}'
+  name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}-${developerName}-${resourceToken}'
   location: location
   tags: tags
 }

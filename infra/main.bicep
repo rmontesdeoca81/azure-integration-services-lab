@@ -99,7 +99,7 @@ module serviceBusResources './app/servicebus.bicep' = {
 }
 
 // API Management
-/*module apimanagementResources './core/gateway/apim.bicep' = {
+module apimanagementResources './core/gateway/apim.bicep' = {
   name: 'apim'
   scope: rg
   params: {
@@ -113,7 +113,7 @@ module serviceBusResources './app/servicebus.bicep' = {
   dependsOn: [
     monitoring
   ]
-}*/
+}
 
 module keyVaultResources './core//security/keyvault.bicep' = {
   name: 'keyvault'
@@ -162,16 +162,16 @@ module functionAppResources './core/host/functions.bicep' = {
 }
 
 // Event Grid
-/*module eventGridResources './app/eventgrid.bicep' = {
+module eventGridResources './app/eventgrid.bicep' = {
   name: 'eventgrid'
   scope: rg
   params: {
     location: location
     tags: tags
-    eventGridTopicName: eventGridTopicName 
+    eventGridTopicName: 'evt-orders'
     eventGridNamespace: '${abbrs.eventGridNamespaces}${resourceToken}'
   }
-}//*/
+}
 
 // Monitor application with Azure Monitor
 module monitoring './core/monitor/monitoring.bicep' = {

@@ -1,6 +1,6 @@
 # Azure Integration Services Example
 
-![](images/azure-integration-services.jpg)
+![](images/AIS Architecture.jpg.jpg)
 
 
 

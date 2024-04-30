@@ -1,6 +1,7 @@
 # Azure Integration Services Example
 
-![](images/AIS Architecture.jpg)
+
+![AIS Architecture](https://github.com/ramonsolorio/azure-integration-services-lab/assets/157521276/e70819b8-240e-4c47-80fe-e15ce8c9af8b)
 
 
 

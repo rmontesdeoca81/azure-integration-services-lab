@@ -2,7 +2,7 @@
 # Lab prerequisites
   1. Visual Studio Code.
   2. Github account.
-  3. Azire Develper CLI [Install the Azure Developer CLI | Microsoft Learn](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd?tabs=winget-windows%2Cbrew-mac%2Cscript-linux&pivots=os-windows)
+  3. Azure Develper CLI [Install the Azure Developer CLI | Microsoft Learn](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd?tabs=winget-windows%2Cbrew-mac%2Cscript-linux&pivots=os-windows)
   4. Create a local folder on your machine for the code.
   5. In the folder path created in the above step, clone this repo on your local machine (git clone)
   6. Deploy the environment.

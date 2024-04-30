@@ -53,4 +53,50 @@ https://logicapp-1-3obbnrwlgsmby.azurewebsites.net:443
  12. Save the changes.
  13. Test the "POST" method in the "Test" section of out API Management instance. We can also test it with Postman.
  14. Verify that we can obtarin 200 HTTP response and that the message is suscribed on the "orders" Service bus topic.
- 15. 
+
+## Lab 2
+### Configure an Azure Function that generates a file on an Azure Storage Account once a Service Bus message is generated from previous lab.
+#### Steps
+
+1. From VS Code, validate that the class "ServiceBusTopicTriggerToBlobSt.cs" from the Azure Function, contains the following C# code:
+2. Deploy it in Azure:
+3. From the VS Code command pallete, select the subscription we are working on and the Azure Function before deployed.
+     Once deployed, from the Azure Portal, go the the "Environment Variables" section adn add the keys and values for the connection strings and storage account.
+
+   Service Bus Connection:
+   Azure Portal >> Service bus instance >> Shared Access Policies >> RootManageSharedAccessKey >> Primary Connection String
+
+   Storage Account Connection:
+   Azure Portal >> Storage account >> Access keys >> Connection string
+
+4. Save the changes.
+5. Test from API Management instance and verify that a new file is created on the storage account.
+
+   ## Lab 3
+   ### Confiugre the Storage Account for subscribing an event on the Event Grid instance each time a file is created or deleted on the container.
+   #### Steps
+
+1. In the left panel of our storage account, click in "Events" and proceed to configure the event to subscribe.
+2. Click in "Configure endpoint" and fill with the worlflow URL of the logicapp-2-xxxx.
+3. Save the changes.
+
+## Lab 4
+### Configure the logicapp-2-xxxx for inserting the details of the order on a SQL database table. This, every time a new order file is created on the storage account and the event subscription is generated on the Event Grid instance.
+#### Steps
+
+1. In the Azure Portal go to the workflow of the logicapp-2-xxxx and under the "Switch" add the "Case Blob Storage Created". Now, every time a new file order is created in the storage account and the corresponing Event grid event is subscribed on it, the logic app will trigger and record the order details on the Azure SQL database table.
+2. Save the changes.
+3. Test from the API Management instance and veirfy that a new record is generated on our Azure SQL database. This, using a Azure Data Studio and adding the Azure SQL database connection string.
+   
+   Azure SQL Connection:
+   From the Azure portal go to our Azure SQL instance >> Overview >> Server name.
+   From the VS Code, go to ".env" file and look for the keys and values for the user and password for connecting to our database.
+
+##Lab 5
+### Configure the logicapp-2-xxxx for sending an email message each time a new order file is de;eted fron the storage account and the event subscription is generated on the Event Grid instance.
+#### Steps
+
+1. In the Azure Portal go to the workflow of the logicapp-2-xxxx and under the "Switch" add the "Case Blob Storage Deleted". Now, every time a new file order is deleted in the storage account and the corresponing Event grid event is subscribed on it, the logic app will trigger and will send an email message with the details.
+2. Save the changes.
+3. Delete a file from the storage account and verify the configured email.
+
